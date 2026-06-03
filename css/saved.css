@@ -1,0 +1,49 @@
+#saved-page { padding: calc(var(--nav-height) + 1rem) 1.5rem 2rem; }
+.saved-inner  { max-width: 700px; margin: 0 auto; }
+
+.saved-title { font-family: var(--font-display); font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+.saved-sub   { color: var(--muted); font-size: 14px; margin-bottom: 2rem; }
+
+.saved-empty {
+  text-align: center; padding: 4rem 2rem; color: var(--muted);
+}
+.saved-empty i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.4; }
+.saved-empty p { line-height: 1.8; }
+
+.saved-list { display: flex; flex-direction: column; gap: 12px; }
+.saved-item {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1rem 1.25rem;
+  display: flex; align-items: center; gap: 1rem;
+  transition: all 0.2s;
+  opacity: 0;
+}
+.saved-item:hover { border-color: rgba(255,107,107,0.25); background: var(--surface2); }
+
+.saved-emoji {
+  font-size: 2rem; width: 52px; height: 52px;
+  background: var(--surface2); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.saved-info { flex: 1; min-width: 0; }
+.saved-item-title { font-family: var(--font-display); font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.saved-item-meta  { font-size: 12px; color: var(--muted); }
+
+.saved-item-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.study-btn {
+  background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.25);
+  color: var(--accent2); padding: 7px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; font-family: var(--font-body); white-space: nowrap;
+}
+.study-btn:hover { background: rgba(78,205,196,0.2); border-color: rgba(78,205,196,0.45); }
+
+.remove-btn {
+  background: none; border: 1px solid rgba(255,107,107,0.2);
+  color: var(--accent); width: 32px; height: 32px; border-radius: 50%;
+  font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; font-family: var(--font-body); flex-shrink: 0;
+}
+.remove-btn:hover { background: rgba(255,107,107,0.1); border-color: rgba(255,107,107,0.4); }

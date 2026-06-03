@@ -1,0 +1,23 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.page {
+  display: none;
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+.page.active { display: block; }
+#home.active { display: flex; }
+
+@media (max-width: 768px) {
+  .page { padding-bottom: calc(var(--bottom-nav-height) + 8px); }
+}

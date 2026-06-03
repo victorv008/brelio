@@ -1,0 +1,16 @@
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c28;
+  --border: rgba(255,255,255,0.07);
+  --accent: #ff6b6b;
+  --accent2: #4ecdc4;
+  --accent3: #ffe66d;
+  --text: #f0f0f5;
+  --muted: rgba(240,240,245,0.45);
+  --card-radius: 24px;
+  --font-display: 'Clash Display', sans-serif;
+  --font-body: 'Satoshi', sans-serif;
+  --nav-height: 68px;
+  --bottom-nav-height: 64px;
+}

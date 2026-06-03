@@ -1,0 +1,76 @@
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.modal-sheet {
+  width: 100%; max-width: 600px; margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border); border-bottom: none;
+  border-radius: 28px 28px 0 0;
+  padding: 1.25rem 2rem 2.5rem;
+  transform: translateY(100%);
+  transition: transform 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-height: 88vh; overflow-y: auto;
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+.modal-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 0 auto 1.5rem;
+}
+
+.modal-emoji { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+
+.modal-cat {
+  text-align: center; font-size: 11px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.75rem;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem; font-weight: 700;
+  text-align: center; line-height: 1.2; margin-bottom: 1rem;
+}
+
+.modal-desc {
+  color: var(--muted); font-size: 14px; line-height: 1.8;
+  text-align: center; margin-bottom: 1.5rem;
+}
+
+.modal-stats {
+  display: flex; justify-content: center; gap: 24px;
+  margin-bottom: 1.25rem;
+  padding: 1rem; border-radius: 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+.modal-stat { text-align: center; }
+.modal-stat-val {
+  font-family: var(--font-display);
+  font-size: 1.2rem; font-weight: 700;
+}
+.modal-stat-label {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;
+}
+
+.modal-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; margin-bottom: 1.75rem;
+}
+.modal-tag {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 12px;
+  padding: 4px 12px; border-radius: 20px;
+}
+
+.modal-actions { display: flex; gap: 12px; }
+.modal-save-btn  { flex: 1; justify-content: center; }
+.modal-start-btn { flex: 2; justify-content: center; }

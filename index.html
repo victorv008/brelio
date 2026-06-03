@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brelio — Swipa dig till kunskap</title>
+  <meta name="description" content="Swipa dig till din nästa kurs. Upptäck hundratals kurser med Brelio — lärande gjort enkelt och beroendeframkallande.">
+  <meta property="og:title" content="Brelio — Swipa dig till kunskap">
+  <meta property="og:description" content="Hitta din nästa kurs genom att swipa. Snabbt, enkelt och beroendeframkallande lärande.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/nav.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <link rel="stylesheet" href="/css/swipe.css">
+  <link rel="stylesheet" href="/css/search.css">
+  <link rel="stylesheet" href="/css/saved.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/modal.css">
+  <link rel="stylesheet" href="/css/preview.css">
+  <link rel="stylesheet" href="/css/home-sections.css">
+  <link rel="stylesheet" href="/css/onboarding.css">
+  <link rel="stylesheet" href="/css/quiz.css">
+  <link rel="stylesheet" href="/css/study.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav id="main-nav">
+  <div class="nav-logo">Brelio<span> 🔥</span></div>
+  <div class="nav-right">
+    <div class="nav-streak" id="nav-streak" style="display:none;">
+      <span>🔥</span><span id="streak-count">0</span>
+    </div>
+    <div class="nav-xp" id="nav-xp" style="display:none;">
+      <span>⚡</span><span id="xp-display">Lvl 1</span>
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-page="home">Hem</button>
+      <button class="nav-btn"        data-page="swipe">Swipa</button>
+      <button class="nav-btn"        data-page="search-page">Sök</button>
+      <button class="nav-btn"        data-page="saved-page">Sparade <span id="saved-count-badge"></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- XP PROGRESS BAR -->
+<div id="xp-bar-wrap"><div id="xp-bar-fill"></div></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="bottom-nav">
+  <button class="bottom-nav-btn active" data-page="home">
+    <i class="fas fa-home"></i><span>Hem</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="swipe">
+    <i class="fas fa-fire"></i><span>Swipa</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="search-page">
+    <i class="fas fa-search"></i><span>Sök</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="saved-page">
+    <i class="fas fa-bookmark"></i><span>Sparade</span>
+  </button>
+</nav>
+
+<!-- HOME -->
+<main id="home" class="page active">
+  <div class="home-bg-orb orb1"></div>
+  <div class="home-bg-orb orb2"></div>
+  <div class="home-bg-orb orb3"></div>
+  <div class="home-hero">
+    <div class="home-content">
+      <div class="home-badge animate-in" style="animation-delay:0ms;">✨ Lärande gjort enkelt</div>
+      <h1 class="home-title animate-in" style="animation-delay:100ms;">
+        Swipa dig till<br><span class="line2">din nästa kurs</span>
+      </h1>
+      <p class="home-sub animate-in" style="animation-delay:200ms;">
+        Bläddra bland hundratals kurser precis som på Tinder. Gilla det du vill lära dig, hoppa över resten — och spara det för senare.
+      </p>
+      <div class="home-search-wrap animate-in" style="animation-delay:300ms;">
+        <div class="search-wrap-inner">
+          <i class="fas fa-search search-icon-left"></i>
+          <input class="home-search" type="text" id="home-search-input" placeholder="Sök på kurs eller kategori...">
+        </div>
+      </div>
+      <div class="cta-row animate-in" style="animation-delay:400ms;">
+        <button class="btn-swipe" data-page="swipe"><i class="fas fa-fire"></i> Börja swipa</button>
+        <button class="btn-outline" data-page="search-page"><i class="fas fa-th-large"></i> Utforska kurser</button>
+      </div>
+      <div class="home-stats animate-in" style="animation-delay:500ms;">
+        <div class="stat">
+          <div class="stat-num" data-count="200" data-suffix="+">0+</div>
+          <div class="stat-label">Kurser</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" data-count="18">0</div>
+          <div class="stat-label">Kategorier</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" data-count="100" data-suffix="%">0%</div>
+          <div class="stat-label">Gratis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="home-sections">
+    <!-- Daily Quiz Banner -->
+    <button id="quiz-banner" class="quiz-banner">
+      <div class="quiz-banner-emoji">🧠</div>
+      <div class="quiz-banner-text">
+        <div class="quiz-banner-title">Dagens Quiz — Testa din kunskap!</div>
+        <div class="quiz-banner-sub">10 frågor · Tjäna upp till 200 XP · Bygg din combo</div>
+      </div>
+      <div class="quiz-banner-arrow"><i class="fas fa-arrow-right"></i></div>
+    </button>
+
+    <div class="home-section">
+      <div class="section-header">
+        <div class="section-title">Populärt just nu 🔥</div>
+        <button class="see-all-btn" data-page="search-page">Se alla</button>
+      </div>
+      <div class="trending-row" id="trending-row"></div>
+    </div>
+    <div class="home-section">
+      <div class="section-header">
+        <div class="section-title">Rekommenderat för dig ✨</div>
+        <button class="see-all-btn" data-page="search-page">Se alla</button>
+      </div>
+      <div class="trending-row" id="recommended-row"></div>
+    </div>
+    <div class="home-section">
+      <div class="section-header">
+        <div class="section-title">Nya kurser 🆕</div>
+        <button class="see-all-btn" data-page="search-page">Se alla</button>
+      </div>
+      <div class="trending-row" id="new-row"></div>
+    </div>
+  </div>
+</main>
+
+<!-- SWIPE -->
+<main id="swipe" class="page">
+  <div class="swipe-orb swipe-orb-1"></div>
+  <div class="swipe-orb swipe-orb-2"></div>
+  <div class="swipe-orb swipe-orb-3"></div>
+  <div class="swipe-orb swipe-orb-4"></div>
+  <div class="swipe-orb swipe-orb-5"></div>
+  <div class="swipe-layout">
+    <div class="swipe-header">
+      <h2>Hitta din kurs 🎯</h2>
+      <p>Swipa höger för ja, vänster för nej, upp för spara</p>
+    </div>
+    <div class="swipe-progress" id="progress-bar"></div>
+    <div class="card-stack" id="card-stack">
+      <div class="done-card" id="done-card">
+        <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+        <h3>Du har sett allt!</h3>
+        <p>Kolla dina sparade kurser eller utforska fler i sökfältet.</p>
+        <button class="btn-swipe" id="restart-btn" style="margin:0 auto 12px;display:inline-flex;">
+          <i class="fas fa-redo"></i> Börja om
+        </button>
+        <br>
+        <button class="btn-outline" data-page="saved-page" style="margin:8px auto 0;display:inline-flex;">
+          <i class="fas fa-bookmark"></i> Sparade kurser
+        </button>
+      </div>
+    </div>
+    <div class="swipe-actions" id="swipe-actions">
+      <div class="action-col">
+        <button class="action-btn nope" id="btn-nope"><i class="fas fa-times"></i></button>
+        <span class="action-label">Skippa</span>
+      </div>
+      <div class="action-col">
+        <button class="action-btn save" id="btn-save"><i class="fas fa-bookmark"></i></button>
+        <span class="action-label">Spara</span>
+      </div>
+      <div class="action-col">
+        <button class="action-btn like" id="btn-like"><i class="fas fa-heart"></i></button>
+        <span class="action-label">Gillar</span>
+      </div>
+    </div>
+    <p class="keyboard-hint">
+      <kbd>←</kbd> skippa &nbsp;|&nbsp; <kbd>↑</kbd> spara &nbsp;|&nbsp; <kbd>→</kbd> gillar
+    </p>
+  </div>
+</main>
+
+<!-- SEARCH -->
+<main id="search-page" class="page">
+  <div class="search-page-inner">
+    <h2 class="search-page-title">Utforska kurser 🔍</h2>
+    <div class="search-bar-big">
+      <i class="fas fa-search si"></i>
+      <input type="text" id="search-input" placeholder="Sök på kurs, ämne eller nyckelord...">
+    </div>
+    <div class="category-chips" id="category-chips"></div>
+    <div class="results-grid" id="results-grid"></div>
+  </div>
+</main>
+
+<!-- SAVED -->
+<main id="saved-page" class="page">
+  <div class="saved-inner">
+    <h2 class="saved-title">Sparade kurser 📚</h2>
+    <p class="saved-sub">Kurser du har sparat för att läsa senare</p>
+    <div id="saved-list"></div>
+  </div>
+</main>
+
+<!-- COURSE DETAIL MODAL -->
+<div id="course-modal" class="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-emoji" id="modal-emoji"></div>
+    <div class="modal-cat"   id="modal-cat"></div>
+    <h2  class="modal-title" id="modal-title"></h2>
+    <p   class="modal-desc"  id="modal-desc"></p>
+    <div class="modal-stats" id="modal-stats"></div>
+    <div class="modal-tags"  id="modal-tags"></div>
+    <div class="modal-actions">
+      <button class="btn-outline modal-save-btn"  id="modal-save-btn">🔖 Spara</button>
+      <button class="btn-swipe  modal-start-btn"  id="modal-start-btn">🚀 Börja lära dig</button>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON PREVIEW OVERLAY -->
+<div id="lesson-preview" class="preview-overlay">
+  <div class="preview-header">
+    <div class="preview-timer" id="preview-timer">60s</div>
+    <button class="preview-close" id="preview-close">✕</button>
+  </div>
+  <div class="preview-progress-bar">
+    <div class="preview-progress-fill"></div>
+  </div>
+  <div class="preview-content">
+    <div class="preview-course-emoji" id="preview-emoji"></div>
+    <div class="preview-label">Visste du att...?</div>
+    <p   class="preview-text" id="preview-text"></p>
+  </div>
+  <div class="preview-footer">
+    <div class="preview-footer-title">Du lärde dig något nytt! 🎉</div>
+    <p class="preview-footer-text">+25 XP intjänat</p>
+    <div class="preview-cta">
+      <button class="btn-outline preview-dismiss" id="preview-dismiss">Kanske senare</button>
+      <button class="btn-swipe   preview-save"    id="preview-save">🔖 Spara kursen</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDY OVERLAY -->
+<div id="study-overlay" class="study-overlay">
+  <div class="study-header">
+    <div class="study-course-emoji" id="study-course-emoji"></div>
+    <div class="study-header-text">
+      <div class="study-course-title" id="study-course-title"></div>
+      <div class="study-card-num"    id="study-card-num">1 / 6</div>
+    </div>
+    <button class="study-close-btn" id="study-close">✕</button>
+  </div>
+  <div class="study-progress-bar">
+    <div class="study-progress-fill" id="study-progress-fill"></div>
+  </div>
+
+  <!-- Reading cards -->
+  <div class="study-card-wrap" id="study-card-wrap">
+    <h2 class="study-card-title" id="study-card-title"></h2>
+    <div class="study-card-body"  id="study-card-body"></div>
+    <div class="study-insight"    id="study-insight"></div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="study-nav" id="study-nav-bar">
+    <button class="study-prev-btn" id="study-prev">← Föregående</button>
+    <button class="btn-swipe study-next-btn" id="study-next">
+      Nästa <i class="fas fa-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- Completion screen -->
+  <div class="study-complete" id="study-complete">
+    <div class="study-complete-emoji">🎓</div>
+    <h2 class="study-complete-title">Lektion klar!</h2>
+    <p class="study-complete-sub">Du har läst igenom hela kursen. Bra jobbat!</p>
+    <div class="study-complete-xp-wrap">
+      <div class="study-complete-xp-label">XP intjänat</div>
+      <div class="study-complete-xp-num" id="study-complete-xp">0</div>
+    </div>
+    <div class="study-complete-actions">
+      <button class="btn-outline" id="study-retry-btn">🔄 Läs igen</button>
+      <button class="btn-outline" id="study-save-btn" style="display:none;">🔖 Spara kursen</button>
+      <button class="btn-swipe"   id="study-done-btn">Klar ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ OVERLAY -->
+<div id="quiz-overlay" class="quiz-overlay">
+
+  <!-- Start screen -->
+  <div id="quiz-start" class="quiz-start">
+    <div class="quiz-start-close-row">
+      <button class="quiz-close-btn" id="quiz-close-start">✕</button>
+    </div>
+    <div class="quiz-start-emoji">🧠</div>
+    <h2 class="quiz-start-title">Dagens Quiz</h2>
+    <p class="quiz-start-sub">10 frågor · Tjäna XP · Bygg din combo och dubbla poängen!</p>
+    <div class="quiz-rewards">
+      <div class="quiz-reward-item">
+        <div class="quiz-reward-icon green">✓</div>
+        <span>+10 XP per rätt svar</span>
+      </div>
+      <div class="quiz-reward-item">
+        <div class="quiz-reward-icon orange">🔥</div>
+        <span>Combo-bonus vid 2+ i rad (upp till 2x XP)</span>
+      </div>
+      <div class="quiz-reward-item">
+        <div class="quiz-reward-icon yellow">⭐</div>
+        <span>+50 bonus-XP för perfekt resultat</span>
+      </div>
+    </div>
+    <button class="btn-swipe" id="quiz-start-btn" style="width:100%;max-width:300px;justify-content:center;">
+      Starta quizet! ⚡
+    </button>
+  </div>
+
+  <!-- Question screen -->
+  <div id="quiz-question-wrap" class="quiz-question-wrap" style="display:none;">
+    <div class="quiz-header">
+      <button class="quiz-close-btn" id="quiz-close-q">✕</button>
+      <div class="quiz-progress-text" id="quiz-progress-text">Fråga 1 av 10</div>
+      <div class="quiz-xp-counter" id="quiz-xp-counter">⚡ 0 XP</div>
+    </div>
+    <div class="quiz-progress-bar">
+      <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+    </div>
+    <div class="quiz-combo" id="quiz-combo"></div>
+    <div class="quiz-body" id="quiz-body">
+      <div class="quiz-q-area">
+        <div class="quiz-cat-chip" id="quiz-cat-chip"></div>
+        <p class="quiz-q-text" id="quiz-q-text"></p>
+      </div>
+      <div class="quiz-options-wrap" id="quiz-options-wrap"></div>
+      <div class="quiz-explanation" id="quiz-explanation"></div>
+      <div class="quiz-next-wrap" id="quiz-next-wrap">
+        <button class="btn-swipe" id="quiz-next-btn" style="width:100%;max-width:300px;justify-content:center;">
+          Nästa fråga →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result screen -->
+  <div id="quiz-result" class="quiz-result" style="display:none;">
+    <div class="quiz-result-stars" id="quiz-result-stars"></div>
+    <div class="quiz-result-emoji" id="quiz-result-emoji"></div>
+    <h2 class="quiz-result-title" id="quiz-result-title"></h2>
+    <p  class="quiz-result-score" id="quiz-result-score"></p>
+    <div class="quiz-result-xp-wrap">
+      <div class="quiz-result-xp-label">XP intjänat</div>
+      <div class="quiz-result-xp-num" id="quiz-result-xp-num">0</div>
+      <div class="quiz-bonus-badge" id="quiz-bonus-badge" style="display:none;"></div>
+    </div>
+    <div class="quiz-result-actions">
+      <button class="btn-outline" id="quiz-retry-btn">🔄 Försök igen</button>
+      <button class="btn-swipe"   id="quiz-done-btn">Färdig! ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING OVERLAY -->
+<div id="onboarding-overlay" class="onboarding-overlay">
+  <div class="onboarding-progress">
+    <div class="onboarding-dot active"></div>
+    <div class="onboarding-dot"></div>
+    <div class="onboarding-dot"></div>
+  </div>
+
+  <!-- Step 1: Welcome -->
+  <div class="onboarding-step active" data-step="1">
+    <div class="onboarding-emoji">👋</div>
+    <h2 class="onboarding-title">Välkommen till Brelio!</h2>
+    <p class="onboarding-sub">Din personliga kursupptäckare. Swipa dig fram till kunskap — precis som TikTok, fast för lärande.</p>
+    <button class="btn-swipe onboarding-btn" id="onboarding-next-1">Kom igång <i class="fas fa-arrow-right"></i></button>
+  </div>
+
+  <!-- Step 2: Choose interests -->
+  <div class="onboarding-step" data-step="2">
+    <div class="onboarding-emoji">🎯</div>
+    <h2 class="onboarding-title">Vad vill du lära dig?</h2>
+    <p class="onboarding-sub">Välj minst 3 kategorier så anpassar vi ditt flöde efter dig.</p>
+    <div class="onboarding-cats-grid" id="onboarding-cats"></div>
+    <button class="btn-swipe onboarding-btn" id="onboarding-next-2">Nästa <i class="fas fa-arrow-right"></i></button>
+  </div>
+
+  <!-- Step 3: Gesture demo -->
+  <div class="onboarding-step" data-step="3">
+    <div class="onboarding-emoji">✋</div>
+    <h2 class="onboarding-title">Så funkar det</h2>
+    <p class="onboarding-sub">Tre gester — det är allt du behöver.</p>
+    <div class="gesture-demo">
+      <div class="gesture-item">
+        <div class="gesture-icon skip">✕</div>
+        <div class="gesture-dir">← Vänster</div>
+        <div class="gesture-label">Skippa</div>
+      </div>
+      <div class="gesture-item">
+        <div class="gesture-icon save">🔖</div>
+        <div class="gesture-dir">↑ Upp</div>
+        <div class="gesture-label">Spara</div>
+      </div>
+      <div class="gesture-item">
+        <div class="gesture-icon like">❤️</div>
+        <div class="gesture-dir">→ Höger</div>
+        <div class="gesture-label">Gillar</div>
+      </div>
+    </div>
+    <button class="btn-swipe onboarding-btn" id="onboarding-finish">Börja swipa! 🔥</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
