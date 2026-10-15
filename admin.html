@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>QuickThinkers — Adminportal</title>
+
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div id="admin-root"></div>
+
+<!-- Vanilla JS, ingen React och ingen Babel. Ordningen spelar roll:
+     data → lager → primitiver → vyer → skal. -->
+<script src="js/admin/mock-data.js"></script>
+<script src="js/admin/store.js"></script>
+<script src="js/admin/ui.js"></script>
+<script src="js/admin/views/courses.js"></script>
+<script src="js/admin/views/users.js"></script>
+<script src="js/admin/views/analytics.js"></script>
+<script src="js/admin/app.js"></script>
+</body>
+</html>

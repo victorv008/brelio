@@ -1,0 +1,7 @@
+# Originalbundlen är en lokal backup (1,6 MB), inte något som ska serveras.
+brelio-app-published.html
+
+# Projektinstruktioner för Claude Code hör inte hemma publikt.
+CLAUDE.md
+
+.DS_Store
