@@ -4,4 +4,16 @@ brelio-app-published.html
 # Projektinstruktioner för Claude Code hör inte hemma publikt.
 CLAUDE.md
 
+# Lokala miljöfiler — Vercel har egna miljövariabler.
+.env
+.env.*
+
+# Databasmigrationer och Edge Functions driftsätts till Supabase, inte Vercel.
+supabase/
+
+# Designsystemets källfiler (används inte av bygget).
+brelio-design-system/
+brelio-design-system.zip
+brelio-ds-README.md
+
 .DS_Store
