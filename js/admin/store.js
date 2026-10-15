@@ -490,6 +490,39 @@ export async function deleteUser(id) {
   emit();
 }
 
+// Läser om användarlistan — t.ex. när någon har löst in en inbjudan.
+// Görs högst var tionde sekund så vyn kan anropa den vid varje ritning.
+let usersLoadedAt = Date.now();
+export async function refreshUsersIfStale() {
+  if (Date.now() - usersLoadedAt < 10000) return false;
+  usersLoadedAt = Date.now();
+  await loadUsers();
+  emit();
+  return true;
+}
+
+// -------------------------------------------------------------------
+// Admininbjudningar (engångslänkar)
+// -------------------------------------------------------------------
+export async function listActiveInvites() {
+  const rows = unwrap(await supabase.from('admin_invites')
+    .select('id, created_at, expires_at')
+    .is('used_at', null).is('revoked_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false }));
+  return rows.map((r) => ({ id: r.id, createdAt: r.created_at, expiresAt: r.expires_at }));
+}
+
+// Returnerar { id, token, expires_at }. Koden syns bara här — databasen
+// sparar bara en hash.
+export async function createInvite() {
+  return unwrap(await supabase.rpc('admin_create_invite'));
+}
+
+export async function revokeInvite(id) {
+  unwrap(await supabase.rpc('admin_revoke_invite', { p_invite_id: id }));
+}
+
 // Progress per kurs: andel klara lektioner av kursens lektioner.
 export async function getUserProgress(userId) {
   const rows = unwrap(await supabase.from('lesson_completions').select('course_id').eq('user_id', userId));

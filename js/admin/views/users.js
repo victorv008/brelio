@@ -39,9 +39,18 @@ export function render(host, ctx) {
       })
     ),
     el('div.page-actions',
-      el('button.btn.btn--ghost', { type: 'button', text: 'Exportera CSV', onclick: () => exportUsers(all) })
+      el('button.btn.btn--ghost', { type: 'button', text: 'Exportera CSV', onclick: () => exportUsers(all) }),
+      el('button.btn.btn--primary', { type: 'button', onclick: () => openInvite(ctx) },
+        el('span', { text: '＋' }), el('span', { text: 'Bjud in admin' }))
     )
   ));
+
+  const invitesHost = el('div');
+  host.appendChild(invitesHost);
+  drawInvites(invitesHost, ctx);
+
+  // Den som löst in en inbjudan ska dyka upp utan att sidan laddas om.
+  Store.refreshUsersIfStale().then((changed) => { if (changed) ctx.refresh(); }).catch(() => {});
 
   const guestToggle = el('input', { type: 'checkbox' });
   guestToggle.checked = state.includeGuests;
@@ -220,6 +229,87 @@ async function removeUser(u, button, ctx) {
     return true;
   });
   return !!result;
+}
+
+// ---------------------------------------------------------------
+// Admininbjudningar
+// ---------------------------------------------------------------
+async function drawInvites(host, ctx) {
+  let invites;
+  try {
+    invites = await Store.listActiveInvites();
+  } catch {
+    return;
+  }
+  U.clear(host);
+  if (!invites.length) return;
+
+  host.appendChild(el('div.panel.invite-panel',
+    el('div.panel__head',
+      el('h2.panel__title', { text: `Väntande admininbjudningar (${invites.length})` }),
+      el('span.panel__meta', { text: 'Engångslänkar som inte använts än' })
+    ),
+    el('div.invite-list', invites.map((inv) => el('div.invite-row',
+      el('span.invite-row__text', { text: `Skapad ${U.relativeTime(inv.createdAt)} · gäller till ${U.formatDate(inv.expiresAt)}` }),
+      U.actionBtn('⊘', 'Återkalla', {
+        className: 'icon-btn--danger',
+        onclick: (e) => U.busy(e.currentTarget, async () => {
+          await Store.revokeInvite(inv.id);
+          U.toast('Inbjudan återkallades — länken fungerar inte längre', 'warn');
+          ctx.refresh();
+        }),
+      })
+    )))
+  ));
+}
+
+function openInvite(ctx) {
+  const m = U.modal({ title: 'Bjud in admin', subtitle: 'Skapa en engångslänk som ger ett nytt admin-konto.' });
+
+  m.body.appendChild(el('ul.invite-facts',
+    el('li', { text: 'Personen väljer själv e-post och lösenord när hen öppnar länken.' }),
+    el('li', { text: 'Länken fungerar en gång och gäller i 7 dagar. Du kan återkalla den innan dess.' }),
+    el('li', { text: 'Den som har länken kan bli admin — skicka den bara till rätt person.' })
+  ));
+
+  const create = el('button.btn.btn--primary', {
+    type: 'button', text: 'Skapa länk',
+    onclick: () => U.busy(create, async () => {
+      const invite = await Store.createInvite();
+      showLink(`${window.location.origin}/admin#invite=${invite.token}`);
+    }),
+  });
+
+  function showLink(link) {
+    U.clear(m.body);
+    U.clear(m.footer);
+
+    const field = U.input({ value: link, readonly: true, className: 'invite-link' });
+    field.addEventListener('focus', () => field.select());
+
+    const copy = el('button.btn.btn--primary', {
+      type: 'button', text: 'Kopiera länk',
+      onclick: async () => {
+        try {
+          await navigator.clipboard.writeText(link);
+        } catch {
+          field.focus();
+          document.execCommand('copy');
+        }
+        copy.textContent = 'Kopierad ✓';
+        U.toast('Länken kopierades', 'ok');
+      },
+    });
+
+    m.body.appendChild(U.field('Inbjudningslänk', field));
+    m.body.appendChild(el('p.notice', { text: 'Länken visas bara nu. Kopiera den innan du stänger — sedan går den inte att ta fram igen.' }));
+    m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Klar', onclick: () => { m.close(); ctx.refresh(); } }));
+    m.footer.appendChild(copy);
+    setTimeout(() => field.select(), 60);
+  }
+
+  m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Avbryt', onclick: m.close }));
+  m.footer.appendChild(create);
 }
 
 // ---------------------------------------------------------------

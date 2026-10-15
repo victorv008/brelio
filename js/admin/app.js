@@ -2,7 +2,7 @@
 // Inloggningen sker mot Supabase Auth och kontot måste ha rollen admin.
 // Den verkliga spärren är databasens RLS; det här är bara gränssnittet.
 import { APP_NAME } from '../lib/brand.js';
-import { supabase, errorMessage } from '../lib/supabase.js';
+import { supabase, errorMessage, invokeFunction } from '../lib/supabase.js';
 import * as Store from './store.js';
 import * as CoursesView from './views/courses.js';
 import * as CategoriesView from './views/categories.js';
@@ -25,6 +25,10 @@ const NAV = [
 // plockar bort hashen när den läst in sessionen, så kolla den direkt.
 const arrivedFromRecovery = /type=recovery/.test(window.location.hash);
 
+// Admininbjudan: /admin#invite=<64 hex-tecken>. Koden ligger i hashen så den
+// aldrig skickas till servern eller hamnar i loggar.
+const inviteToken = (window.location.hash.match(/^#invite=([0-9a-f]{64})$/) || [])[1] || null;
+
 let root = null;
 let current = NAV.find((n) => `#${n.id}` === window.location.hash) ? window.location.hash.slice(1) : 'kurser';
 
@@ -34,6 +38,11 @@ let current = NAV.find((n) => `#${n.id}` === window.location.hash) ? window.loca
 async function boot() {
   U.clear(root);
   root.appendChild(el('div.boot', U.spinner()));
+
+  if (inviteToken && window.location.hash.includes(inviteToken)) {
+    renderInvite(inviteToken);
+    return;
+  }
 
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -167,6 +176,55 @@ function renderNewPassword() {
 
   authCard('Nytt lösenord', 'Välj ett lösenord på minst 8 tecken', form);
   setTimeout(() => pass.focus(), 80);
+}
+
+function renderInvite(token) {
+  const name = U.input({ placeholder: 'Ditt namn', autocomplete: 'name', className: 'login__input', maxlength: 60 });
+  const email = U.input({ type: 'email', placeholder: 'E-post', autocomplete: 'email', className: 'login__input', required: true });
+  const pass = U.input({ type: 'password', placeholder: 'Välj lösenord (minst 8 tecken)', autocomplete: 'new-password', className: 'login__input', minlength: 8, required: true });
+  const again = U.input({ type: 'password', placeholder: 'Upprepa lösenordet', autocomplete: 'new-password', className: 'login__input', required: true });
+  const error = el('p.login__error');
+  const submit = el('button.btn.btn--primary.login__btn', { type: 'submit', text: 'Skapa admin-konto' });
+
+  const form = el('form.login__form', {
+    onsubmit: async (e) => {
+      e.preventDefault();
+      error.textContent = '';
+      if (pass.value.length < 8) { error.textContent = 'Lösenordet måste vara minst 8 tecken.'; return; }
+      if (pass.value !== again.value) { error.textContent = 'Lösenorden matchar inte.'; return; }
+
+      await U.busy(submit, async () => {
+        try {
+          await invokeFunction('accept-invite', {
+            token, name: name.value.trim(), email: email.value.trim(), password: pass.value,
+          });
+        } catch (err) {
+          error.textContent = errorMessage(err);
+          shake(card);
+          return;
+        }
+        // Kontot finns — logga in och ta bort koden ur adressfältet.
+        history.replaceState(null, '', window.location.pathname);
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: email.value.trim(), password: pass.value,
+        });
+        if (authError) {
+          renderLogin('Kontot är skapat. Logga in med din e-post och ditt lösenord.');
+          return;
+        }
+        U.toast('Välkommen! Du är nu admin.', 'ok');
+        await boot();
+      });
+    },
+  }, name, email, pass, again, error, submit);
+
+  const card = authCard('Bli admin', `Du har bjudits in till ${APP_NAME}`, form,
+    el('button.login__link', {
+      type: 'button', text: 'Har du redan ett konto? Logga in',
+      onclick: () => { history.replaceState(null, '', window.location.pathname); renderLogin(); },
+    })
+  );
+  setTimeout(() => name.focus(), 80);
 }
 
 function renderDenied(email) {
