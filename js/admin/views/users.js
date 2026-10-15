@@ -1,280 +1,323 @@
 // QuickThinkers adminportal — användarhantering.
-// Lista, sök, roller, bannlysning och progressvy.
+// Lista, sök, roller, bannlysning, radering och progress per kurs.
+// Bann och radering går via Edge Function admin-users (kräver secret-nyckel).
+import * as Store from '../store.js';
+import { errorMessage } from '../../lib/supabase.js';
 
-(function () {
-  'use strict';
+const U = window.QTUI;
+const el = U.el;
 
-  var U = window.QTUI;
-  var el = U.el;
-  var Store = window.QTStore;
+let filter = { query: '', role: 'all', status: 'all', sort: 'active' };
 
-  var filter = { query: '', role: 'all', status: 'all', sort: 'active' };
+const ROLE_LABEL = { user: 'Användare', admin: 'Admin' };
+const AVATAR_COLORS = ['#FF4E42', '#7C6BFF', '#FFB23E', '#2DD4BF', '#9A6BFF', '#6E7BFF', '#FF9233'];
 
-  var ROLE_LABEL = { user: 'Användare', premium: 'Premium', admin: 'Admin' };
-  var ROLE_KIND = { user: '', premium: 'amber', admin: 'accent' };
+// Samma färg för samma användare varje gång.
+function avatarColor(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
 
-  function render(host, ctx) {
-    U.clear(host);
+function initials(name) {
+  return name.split(/[\s.@_-]+/).filter(Boolean).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
+}
 
-    var all = Store.getState().users;
+const isMe = (u) => u.id === Store.getState().me.id;
 
-    host.appendChild(el('div.page-head',
-      el('div',
-        el('h1.page-title', { text: 'Användare' }),
-        el('p.page-sub', {
-          text: all.length + ' konton · ' +
-            all.filter(function (u) { return u.status === 'active'; }).length + ' aktiva · ' +
-            all.filter(function (u) { return u.status === 'banned'; }).length + ' bannade',
-        })
-      ),
-      el('div.page-actions',
-        el('button.btn.btn--ghost', {
-          type: 'button', text: 'Exportera CSV',
-          onclick: function () { exportUsers(all); },
-        })
-      )
-    ));
+export function render(host, ctx) {
+  U.clear(host);
+  const state = Store.getState();
+  const all = state.users;
+  const registered = all.filter((u) => !u.isAnonymous);
 
-    var searchInput = U.input({
+  host.appendChild(el('div.page-head',
+    el('div',
+      el('h1.page-title', { text: 'Användare' }),
+      el('p.page-sub', {
+        text: `${registered.length} konton · ${registered.filter((u) => u.status === 'banned').length} bannade · ${state.guestCount} gäster`,
+      })
+    ),
+    el('div.page-actions',
+      el('button.btn.btn--ghost', { type: 'button', text: 'Exportera CSV', onclick: () => exportUsers(all) })
+    )
+  ));
+
+  const guestToggle = el('input', { type: 'checkbox' });
+  guestToggle.checked = state.includeGuests;
+  guestToggle.addEventListener('change', async () => {
+    guestToggle.disabled = true;
+    try {
+      await Store.setIncludeGuests(guestToggle.checked);
+      ctx.refresh();
+    } catch (err) {
+      U.toast('Kunde inte läsa in användarna', 'warn');
+      guestToggle.disabled = false;
+    }
+  });
+
+  host.appendChild(el('div.toolbar',
+    el('div.toolbar__search', el('span.toolbar__icon', { text: '⌕' }), U.input({
       type: 'search', placeholder: 'Sök namn eller e-post…', value: filter.query,
-      oninput: function (e) { filter.query = e.target.value; draw(); },
-    });
+      oninput: (e) => { filter.query = e.target.value; draw(); },
+    })),
+    U.select([
+      { value: 'all', label: 'Alla roller' },
+      { value: 'user', label: 'Användare' },
+      { value: 'admin', label: 'Admin' },
+    ], filter.role, { onchange: (e) => { filter.role = e.target.value; draw(); } }),
+    U.select([
+      { value: 'all', label: 'Alla statusar' },
+      { value: 'active', label: 'Aktiva' },
+      { value: 'banned', label: 'Bannade' },
+    ], filter.status, { onchange: (e) => { filter.status = e.target.value; draw(); } }),
+    U.select([
+      { value: 'active', label: 'Senast aktiv' },
+      { value: 'joined', label: 'Senast registrerad' },
+      { value: 'xp', label: 'Mest XP' },
+      { value: 'name', label: 'Namn A–Ö' },
+    ], filter.sort, { onchange: (e) => { filter.sort = e.target.value; draw(); } }),
+    el('label.switch.switch--inline',
+      guestToggle,
+      el('span.switch__track', el('span.switch__thumb')),
+      el('span.switch__label', { text: 'Visa gäster' })
+    )
+  ));
 
-    host.appendChild(el('div.toolbar',
-      el('div.toolbar__search', el('span.toolbar__icon', { text: '⌕' }), searchInput),
-      U.select([
-        { value: 'all', label: 'Alla roller' },
-        { value: 'user', label: 'Användare' },
-        { value: 'premium', label: 'Premium' },
-        { value: 'admin', label: 'Admin' },
-      ], filter.role, { onchange: function (e) { filter.role = e.target.value; draw(); } }),
-      U.select([
-        { value: 'all', label: 'Alla statusar' },
-        { value: 'active', label: 'Aktiva' },
-        { value: 'banned', label: 'Bannade' },
-      ], filter.status, { onchange: function (e) { filter.status = e.target.value; draw(); } }),
-      U.select([
-        { value: 'active', label: 'Senast aktiv' },
-        { value: 'joined', label: 'Senast registrerad' },
-        { value: 'xp', label: 'Mest XP' },
-        { value: 'name', label: 'Namn A–Ö' },
-      ], filter.sort, { onchange: function (e) { filter.sort = e.target.value; draw(); } })
-    ));
+  const listHost = el('div.list-host');
+  host.appendChild(listHost);
 
-    var listHost = el('div.list-host');
-    host.appendChild(listHost);
-
-    function draw() {
-      U.clear(listHost);
-      var rows = Store.listUsers(filter);
-
-      if (!rows.length) {
-        listHost.appendChild(U.emptyState('👤', 'Inga användare matchar',
-          'Prova att ändra sökningen eller filtren.'));
-        return;
-      }
-
-      var table = el('div.table.table--users');
-      table.appendChild(el('div.table__head',
-        el('span', { text: 'Användare' }),
-        el('span', { text: 'Roll' }),
-        el('span', { text: 'XP' }),
-        el('span', { text: 'Streak' }),
-        el('span', { text: 'Kurser' }),
-        el('span', { text: 'Senast aktiv' }),
-        el('span', { text: 'Status' }),
-        el('span', { text: '' })
-      ));
-
-      rows.forEach(function (u) { table.appendChild(userRow(u, draw, ctx)); });
-      listHost.appendChild(table);
+  function draw() {
+    U.clear(listHost);
+    const rows = Store.listUsers(filter);
+    if (!rows.length) {
+      listHost.appendChild(U.emptyState('👤',
+        all.length ? 'Inga användare matchar' : 'Inga användare än',
+        all.length ? 'Prova att ändra sökningen eller filtren.' : 'När någon skapar ett konto i appen syns hen här.'));
+      return;
     }
 
-    draw();
-  }
-
-  function initials(name) {
-    return name.split(' ').map(function (p) { return p[0]; }).slice(0, 2).join('').toUpperCase();
-  }
-
-  function userRow(u, redraw, ctx) {
-    var done = (u.progress || []).filter(function (p) { return p.percent >= 100; }).length;
-    var started = (u.progress || []).length;
-
-    return el('div.table__row', { className: u.status === 'banned' ? 'table__row--muted' : '' },
-      el('div.user-cell',
-        el('span.avatar', { style: { background: u.avatarColor + '22', color: u.avatarColor, borderColor: u.avatarColor + '44' }, text: initials(u.name) }),
-        el('div.user-cell__text',
-          el('span.user-cell__name', { text: u.name }),
-          el('span.user-cell__mail', { text: u.email })
-        )
-      ),
-      el('span', { 'data-label': 'Roll' },
-        U.select(
-          Object.keys(ROLE_LABEL).map(function (r) { return { value: r, label: ROLE_LABEL[r] }; }),
-          u.role,
-          {
-            className: 'select--inline',
-            onchange: function (e) {
-              Store.setUserRole(u.id, e.target.value);
-              U.toast(u.name + ' är nu ' + ROLE_LABEL[e.target.value].toLowerCase(), 'ok');
-              redraw();
-            },
-          }
-        )
-      ),
-      el('span.cell-mono', { 'data-label': 'XP', text: U.formatNumber(u.xp) }),
-      el('span.cell-mono', { 'data-label': 'Streak', text: u.streak ? u.streak + ' 🔥' : '—' }),
-      el('span.cell-muted', { 'data-label': 'Kurser', text: done + '/' + started + ' klara' }),
-      el('span.cell-muted', { 'data-label': 'Senast aktiv', text: U.relativeTime(u.lastActiveAt) }),
-      el('span', { 'data-label': 'Status' },
-        U.badge(u.status === 'banned' ? 'Bannad' : 'Aktiv', u.status === 'banned' ? 'danger' : 'ok')
-      ),
-      el('div.row-actions',
-        U.actionBtn('◫', 'Progress', {
-          onclick: function () { openUserDetail(u.id, redraw); },
-        }),
-        U.actionBtn(
-          u.status === 'banned' ? '↺' : '⊘',
-          u.status === 'banned' ? 'Häv bann' : 'Banna',
-          {
-            className: u.status === 'banned' ? '' : 'icon-btn--danger',
-            onclick: function () {
-              if (u.status === 'banned') {
-                Store.toggleBan(u.id);
-                U.toast(u.name + ' är aktiv igen', 'ok');
-                redraw();
-                return;
-              }
-              U.confirm({
-                title: 'Banna användaren?',
-                message: u.name + ' stängs av och kan inte logga in. Du kan häva det när som helst.',
-                confirmLabel: 'Banna', danger: true,
-              }).then(function (ok) {
-                if (!ok) return;
-                Store.toggleBan(u.id);
-                U.toast(u.name + ' bannades', 'warn');
-                redraw();
-              });
-            },
-          }
-        ),
-        U.actionBtn('🗑', 'Ta bort', {
-          className: 'icon-btn--danger',
-          onclick: function () {
-            U.confirm({
-              title: 'Ta bort kontot?',
-              message: 'Kontot för ' + u.name + ' raderas permanent, inklusive XP och progress.',
-              confirmLabel: 'Ta bort', danger: true,
-            }).then(function (ok) {
-              if (!ok) return;
-              Store.deleteUser(u.id);
-              U.toast('Kontot togs bort', 'warn');
-              ctx.refresh();
-            });
-          },
-        })
+    const table = el('div.table.table--users',
+      el('div.table__head',
+        el('span', { text: 'Användare' }), el('span', { text: 'Roll' }), el('span', { text: 'XP' }),
+        el('span', { text: 'Streak' }), el('span', { text: 'Registrerad' }), el('span', { text: 'Senast aktiv' }),
+        el('span', { text: 'Status' }), el('span', { text: '' })
       )
     );
+    rows.forEach((u) => table.appendChild(userRow(u, draw, ctx)));
+    listHost.appendChild(table);
   }
 
-  // ---------------------------------------------------------------
-  // Detaljvy
-  // ---------------------------------------------------------------
-  function openUserDetail(userId, redraw) {
-    var u = Store.getUser(userId);
-    if (!u) return;
+  draw();
+}
 
-    var m = U.modal({ title: u.name, subtitle: u.email, wide: true });
+function roleCell(u, redraw) {
+  if (u.isAnonymous) return U.badge('Gäst');
 
-    m.body.appendChild(el('div.stat-strip',
-      statBox('XP totalt', U.formatNumber(u.xp), 'amber'),
-      statBox('Streak', u.streak ? u.streak + ' dagar' : 'Ingen', 'accent'),
-      statBox('Kurser påbörjade', String((u.progress || []).length), 'cool'),
-      statBox('Kurser klara', String((u.progress || []).filter(function (p) { return p.percent >= 100; }).length), 'ok')
-    ));
-
-    m.body.appendChild(el('div.detail-meta',
-      metaRow('Roll', ROLE_LABEL[u.role]),
-      metaRow('Status', u.status === 'banned' ? 'Bannad' : 'Aktiv'),
-      metaRow('Registrerad', U.formatDate(u.joinedAt)),
-      metaRow('Senast aktiv', U.relativeTime(u.lastActiveAt))
-    ));
-
-    m.body.appendChild(el('h3.section-title', { text: 'Progress per kurs' }));
-
-    if (!(u.progress || []).length) {
-      m.body.appendChild(el('p.deck__empty', { text: 'Användaren har inte påbörjat någon kurs än.' }));
-    } else {
-      var wrap = el('div.progress-list');
-      u.progress.forEach(function (p) {
-        var c = Store.getCourse(p.courseId);
-        if (!c) return;
-        wrap.appendChild(el('div.progress-item',
-          el('span.progress-item__emoji', { text: c.emoji }),
-          el('div.progress-item__body',
-            el('div.progress-item__top',
-              el('span.progress-item__title', { text: c.title }),
-              el('span.progress-item__pct', { text: p.percent + ' %' })
-            ),
-            el('div.bar', el('div.bar__fill', {
-              style: {
-                width: p.percent + '%',
-                background: p.percent >= 100 ? 'var(--cool)' : 'var(--fire)',
-              },
-            }))
-          )
-        ));
-      });
-      m.body.appendChild(wrap);
-    }
-
-    m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Stäng', onclick: m.close }));
-    m.footer.appendChild(el('button.btn', {
-      type: 'button',
-      className: u.status === 'banned' ? 'btn--primary' : 'btn--danger',
-      text: u.status === 'banned' ? 'Häv bannlysning' : 'Banna användaren',
-      onclick: function () {
-        Store.toggleBan(u.id);
-        U.toast(u.status === 'banned' ? u.name + ' bannades' : u.name + ' är aktiv igen', 'warn');
-        m.close();
-        redraw();
-      },
-    }));
+  const select = U.select(
+    Object.keys(ROLE_LABEL).map((r) => ({ value: r, label: ROLE_LABEL[r] })),
+    u.role,
+    { className: 'select--inline' }
+  );
+  if (isMe(u)) {
+    select.disabled = true;
+    select.title = 'Du kan inte ändra din egen roll';
   }
-
-  function statBox(label, value, kind) {
-    return el('div.stat-box',
-      el('span.stat-box__label', { text: label }),
-      el('span.stat-box__value', { className: kind ? 'is-' + kind : '', text: value })
-    );
-  }
-
-  function metaRow(label, value) {
-    return el('div.meta-row',
-      el('span.meta-row__label', { text: label }),
-      el('span.meta-row__value', { text: value })
-    );
-  }
-
-  // ---------------------------------------------------------------
-  // Export
-  // ---------------------------------------------------------------
-  function exportUsers(users) {
-    var rows = [['Namn', 'E-post', 'Roll', 'Status', 'XP', 'Streak', 'Påbörjade kurser', 'Klara kurser', 'Registrerad', 'Senast aktiv']];
-    users.forEach(function (u) {
-      rows.push([
-        u.name, u.email, ROLE_LABEL[u.role],
-        u.status === 'banned' ? 'Bannad' : 'Aktiv',
-        u.xp, u.streak,
-        (u.progress || []).length,
-        (u.progress || []).filter(function (p) { return p.percent >= 100; }).length,
-        u.joinedAt.slice(0, 10), u.lastActiveAt.slice(0, 10),
-      ]);
+  select.addEventListener('change', async () => {
+    const role = select.value;
+    const ok = await U.confirm({
+      title: role === 'admin' ? 'Gör till admin?' : 'Ta bort admin-rollen?',
+      message: role === 'admin'
+        ? `${u.name} får full tillgång till adminportalen: kurser, användare och statistik.`
+        : `${u.name} förlorar tillgången till adminportalen.`,
+      confirmLabel: role === 'admin' ? 'Gör till admin' : 'Ta bort rollen',
+      danger: role !== 'admin',
     });
-    U.downloadCsv('quickthinkers-anvandare.csv', rows);
-    U.toast('Användare exporterade', 'ok');
-  }
+    if (!ok) { select.value = u.role; return; }
+    select.disabled = true;
+    try {
+      await Store.setUserRole(u.id, role);
+      U.toast(`${u.name} är nu ${ROLE_LABEL[role].toLowerCase()}`, 'ok');
+      redraw();
+    } catch (err) {
+      select.value = u.role;
+      select.disabled = false;
+      U.toast(errorMessage(err, 'Kunde inte byta roll.'), 'warn');
+    }
+  });
+  return select;
+}
 
-  window.QTViewUsers = { render: render };
-})();
+function userRow(u, redraw, ctx) {
+  const color = avatarColor(u.id);
+  const banned = u.status === 'banned';
+  // Admins skyddas: först tas rollen bort, sedan kan kontot bannas/raderas.
+  const locked = isMe(u) || u.role === 'admin';
+  const lockedTitle = isMe(u) ? 'Det här är ditt eget konto' : 'Ta bort admin-rollen först';
+
+  return el('div.table__row', { className: banned ? 'table__row--muted' : '' },
+    el('div.user-cell',
+      el('span.avatar', { style: { background: `${color}22`, color, borderColor: `${color}44` }, text: initials(u.name) }),
+      el('div.user-cell__text',
+        el('span.user-cell__name', { text: isMe(u) ? `${u.name} (du)` : u.name }),
+        el('span.user-cell__mail', { text: u.email || 'Gästkonto utan e-post' })
+      )
+    ),
+    el('span', { 'data-label': 'Roll' }, roleCell(u, redraw)),
+    el('span.cell-mono', { 'data-label': 'XP', text: U.formatNumber(u.xp) }),
+    el('span.cell-mono', { 'data-label': 'Streak', text: u.streak ? `${u.streak} 🔥` : '—' }),
+    el('span.cell-muted', { 'data-label': 'Registrerad', text: u.isAnonymous ? '—' : U.formatDate(u.joinedAt) }),
+    el('span.cell-muted', { 'data-label': 'Senast aktiv', text: U.relativeTime(u.lastActiveAt) }),
+    el('span', { 'data-label': 'Status' }, U.badge(banned ? 'Bannad' : 'Aktiv', banned ? 'danger' : 'ok')),
+    el('div.row-actions',
+      U.actionBtn('◫', 'Progress', { onclick: () => openUserDetail(u.id, redraw) }),
+      U.actionBtn(banned ? '↺' : '⊘', banned ? 'Häv bann' : 'Banna', {
+        className: banned ? '' : 'icon-btn--danger',
+        disabled: locked && !banned,
+        title: locked && !banned ? lockedTitle : (banned ? 'Häv bann' : 'Banna'),
+        onclick: (e) => toggleBan(u, e.currentTarget, redraw),
+      }),
+      U.actionBtn('🗑', 'Ta bort', {
+        className: 'icon-btn--danger',
+        disabled: locked,
+        title: locked ? lockedTitle : 'Ta bort',
+        onclick: (e) => removeUser(u, e.currentTarget, ctx),
+      })
+    )
+  );
+}
+
+async function toggleBan(u, button, redraw) {
+  const banned = u.status === 'banned';
+  if (!banned) {
+    const ok = await U.confirm({
+      title: 'Banna användaren?',
+      message: `${u.name} stängs av direkt och kan inte logga in. Du kan häva det när som helst.`,
+      confirmLabel: 'Banna', danger: true,
+    });
+    if (!ok) return false;
+  }
+  const result = await U.busy(button, async () => {
+    await Store.setUserBanned(u.id, !banned);
+    U.toast(banned ? `${u.name} är aktiv igen` : `${u.name} bannades`, banned ? 'ok' : 'warn');
+    redraw();
+    return true;
+  });
+  return !!result;
+}
+
+async function removeUser(u, button, ctx) {
+  const ok = await U.confirm({
+    title: 'Ta bort kontot?',
+    message: `Kontot för ${u.name} raderas permanent, inklusive XP, sparade kurser och progress. Det går inte att ångra.`,
+    confirmLabel: 'Ta bort', danger: true,
+  });
+  if (!ok) return false;
+  const result = await U.busy(button, async () => {
+    await Store.deleteUser(u.id);
+    U.toast('Kontot togs bort', 'warn');
+    ctx.refresh();
+    return true;
+  });
+  return !!result;
+}
+
+// ---------------------------------------------------------------
+// Detaljvy
+// ---------------------------------------------------------------
+function openUserDetail(userId, redraw) {
+  const u = Store.getUser(userId);
+  if (!u) return;
+
+  const m = U.modal({ title: u.name, subtitle: u.email || 'Gästkonto', wide: true });
+
+  m.body.appendChild(el('div.stat-strip',
+    statBox('XP totalt', U.formatNumber(u.xp), 'amber'),
+    statBox('Streak', u.streak ? `${u.streak} dagar` : 'Ingen', 'accent'),
+    statBox('Nivå', String(Math.floor(u.xp / 200) + 1), 'cool'),
+    statBox('Status', u.status === 'banned' ? 'Bannad' : 'Aktiv', u.status === 'banned' ? '' : 'ok')
+  ));
+
+  m.body.appendChild(el('div.detail-meta',
+    metaRow('Roll', u.isAnonymous ? 'Gäst' : ROLE_LABEL[u.role]),
+    metaRow('Status', u.status === 'banned' ? 'Bannad' : 'Aktiv'),
+    metaRow(u.isAnonymous ? 'Första besök' : 'Registrerad', U.formatDate(u.joinedAt)),
+    metaRow('Senast aktiv', U.relativeTime(u.lastActiveAt))
+  ));
+
+  m.body.appendChild(el('h3.section-title', { text: 'Progress per kurs' }));
+  const progressHost = el('div', U.spinner());
+  m.body.appendChild(progressHost);
+
+  Store.getUserProgress(u.id).then((progress) => {
+    U.clear(progressHost);
+    if (!progress.length) {
+      progressHost.appendChild(el('p.deck__empty', { text: 'Användaren har inte klarat någon lektion än.' }));
+      return;
+    }
+    progressHost.appendChild(el('div.progress-list', progress.map((p) => {
+      const c = Store.getCourse(p.courseId);
+      return el('div.progress-item',
+        el('span.progress-item__emoji', { text: c ? c.emoji : '—' }),
+        el('div.progress-item__body',
+          el('div.progress-item__top',
+            el('span.progress-item__title', { text: c ? c.title : 'Borttagen kurs' }),
+            el('span.progress-item__pct', { text: `${p.percent} %` })
+          ),
+          el('div.bar', el('div.bar__fill', {
+            style: { width: `${p.percent}%`, background: p.percent >= 100 ? 'var(--cool)' : 'var(--fire)' },
+          }))
+        )
+      );
+    })));
+  }).catch(() => {
+    U.clear(progressHost);
+    progressHost.appendChild(el('p.deck__empty', { text: 'Kunde inte läsa in progress.' }));
+  });
+
+  m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Stäng', onclick: m.close }));
+
+  const banned = u.status === 'banned';
+  if (!isMe(u) && (u.role !== 'admin' || banned)) {
+    const banBtn = el('button.btn', {
+      type: 'button',
+      className: banned ? 'btn--primary' : 'btn--danger',
+      text: banned ? 'Häv bannlysning' : 'Banna användaren',
+      onclick: async () => {
+        if (await toggleBan(u, banBtn, redraw)) m.close();
+      },
+    });
+    m.footer.appendChild(banBtn);
+  }
+}
+
+function statBox(label, value, kind) {
+  return el('div.stat-box',
+    el('span.stat-box__label', { text: label }),
+    el('span.stat-box__value', { className: kind ? `is-${kind}` : '', text: value })
+  );
+}
+
+function metaRow(label, value) {
+  return el('div.meta-row',
+    el('span.meta-row__label', { text: label }),
+    el('span.meta-row__value', { text: value })
+  );
+}
+
+// ---------------------------------------------------------------
+// Export
+// ---------------------------------------------------------------
+function exportUsers(users) {
+  const rows = [['Namn', 'E-post', 'Roll', 'Status', 'XP', 'Streak', 'Registrerad', 'Senast aktiv']];
+  users.forEach((u) => {
+    rows.push([
+      u.name, u.email, u.isAnonymous ? 'Gäst' : ROLE_LABEL[u.role],
+      u.status === 'banned' ? 'Bannad' : 'Aktiv',
+      u.xp, u.streak,
+      u.isAnonymous ? '' : u.joinedAt.slice(0, 10), u.lastActiveAt.slice(0, 10),
+    ]);
+  });
+  U.downloadCsv('quickthinkers-anvandare.csv', rows);
+  U.toast('Användare exporterade', 'ok');
+}

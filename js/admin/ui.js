@@ -1,6 +1,7 @@
 // QuickThinkers adminportal — UI-primitiver.
 // Allt byggs som DOM-noder, aldrig via innerHTML med data i, så
 // kurstitlar och användarnamn aldrig kan tolkas som markup.
+import { errorMessage } from '../lib/supabase.js';
 
 (function () {
   'use strict';
@@ -219,6 +220,9 @@
     var csv = rows.map(function (row) {
       return row.map(function (cell) {
         var s = cell === null || cell === undefined ? '' : String(cell);
+        // Användarnamn kommer från användarna själva. En cell som börjar
+        // med = + - @ tolkas annars som formel av Excel (CSV-injektion).
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
         return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
       }).join(';');
     }).join('\n');
@@ -233,12 +237,38 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
 
+  // ---------------------------------------------------------------
+  // Spara-knappar: låses medan anropet pågår så ett dubbelklick inte
+  // skapar två kurser. Felet visas som toast och knappen släpps igen.
+  //   busy(btn, function () { return Store.createCourse(data); })
+  // ---------------------------------------------------------------
+  function busy(button, run, errorText) {
+    if (button.disabled) return Promise.resolve(null);
+    button.disabled = true;
+    button.classList.add('is-busy');
+    return Promise.resolve()
+      .then(run)
+      .catch(function (err) {
+        console.error(err);
+        toast(errorMessage(err, errorText), 'warn');
+        return null;
+      })
+      .finally(function () {
+        button.disabled = false;
+        button.classList.remove('is-busy');
+      });
+  }
+
+  function spinner() {
+    return el('div.loading', el('span.loading__dot'), el('span.loading__dot'), el('span.loading__dot'));
+  }
+
   window.QTUI = {
     el: el, clear: clear, append: append,
     formatDate: formatDate, relativeTime: relativeTime, formatNumber: formatNumber,
     toast: toast, modal: modal, confirm: confirm,
     field: field, input: input, textarea: textarea, select: select,
     badge: badge, actionBtn: actionBtn, emptyState: emptyState,
-    downloadCsv: downloadCsv,
+    downloadCsv: downloadCsv, busy: busy, spinner: spinner,
   };
 })();

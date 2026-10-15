@@ -1,9 +1,4 @@
-// Adminportalens startpunkt. Ordningen spelar roll:
-// data → lager → primitiver → vyer → skal.
-import './mock-data.js';
-import './store.js';
+// Adminportalens startpunkt. ui.js först — vyerna läser window.QTUI när de
+// laddas. app.js drar in datalagret och vyerna själv.
 import './ui.js';
-import './views/courses.js';
-import './views/users.js';
-import './views/analytics.js';
 import './app.js';
