@@ -523,6 +523,15 @@ export async function revokeInvite(id) {
   unwrap(await supabase.rpc('admin_revoke_invite', { p_invite_id: id }));
 }
 
+// Skapar ett admin-konto utan lösenord — personen sätter det själv via
+// "Glömt lösenordet?".
+export async function createAdminByEmail(email) {
+  await invokeFunction('admin-users', { action: 'create_admin', email });
+  usersLoadedAt = Date.now();
+  await loadUsers();
+  emit();
+}
+
 // Progress per kurs: andel klara lektioner av kursens lektioner.
 export async function getUserProgress(userId) {
   const rows = unwrap(await supabase.from('lesson_completions').select('course_id').eq('user_id', userId));

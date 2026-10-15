@@ -1,5 +1,5 @@
 // QuickThinkers — adminåtgärder som kräver secret-nyckeln:
-// bannlysa, häva bann och radera konton.
+// bannlysa, häva bann, radera konton och skapa nya admin-konton via e-post.
 //
 // Driftsätts med verify_jwt = false: funktionen verifierar själv anroparens
 // session mot Auth och kontrollerar admin-rollen i databasen.
@@ -19,6 +19,38 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+// Skapar ett bekräftat konto utan lösenord och ger det admin-rollen.
+// Personen sätter sitt eget lösenord via "Glömt lösenordet?".
+async function createAdmin(admin: ReturnType<typeof adminClient>, rawEmail: unknown) {
+  const email = String(rawEmail ?? '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+    return json({ error: 'Ange en giltig e-postadress.' }, 400);
+  }
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+  });
+  if (createError || !created?.user) {
+    const exists = /already|registered|exists/i.test(createError?.message ?? '');
+    return json({
+      error: exists
+        ? 'Det finns redan ett konto med den e-postadressen. Ge det admin-rollen i användarlistan i stället.'
+        : 'Kunde inte skapa kontot.',
+    }, 400);
+  }
+
+  // Profilen skapas av triggern on_auth_user_created.
+  const { error: roleError } = await admin
+    .from('profiles').update({ role: 'admin' }).eq('id', created.user.id);
+  if (roleError) {
+    await admin.auth.admin.deleteUser(created.user.id);
+    return json({ error: 'Kunde inte skapa kontot.' }, 500);
+  }
+
+  return json({ ok: true, userId: created.user.id });
 }
 
 function adminClient() {
@@ -51,12 +83,14 @@ Deno.serve(async (req) => {
     return json({ error: 'Du har inte admin-behörighet.' }, 403);
   }
 
-  let body: { action?: string; userId?: string };
+  let body: { action?: string; userId?: string; email?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: 'Ogiltig förfrågan.' }, 400);
   }
+
+  if (body.action === 'create_admin') return createAdmin(admin, body.email);
 
   const { action, userId } = body;
   if (!['ban', 'unban', 'delete'].includes(action ?? '') || typeof userId !== 'string') {

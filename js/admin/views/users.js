@@ -2,7 +2,7 @@
 // Lista, sök, roller, bannlysning, radering och progress per kurs.
 // Bann och radering går via Edge Function admin-users (kräver secret-nyckel).
 import * as Store from '../store.js';
-import { errorMessage } from '../../lib/supabase.js';
+import { errorMessage, UserError } from '../../lib/supabase.js';
 
 const U = window.QTUI;
 const el = U.el;
@@ -40,8 +40,8 @@ export function render(host, ctx) {
     ),
     el('div.page-actions',
       el('button.btn.btn--ghost', { type: 'button', text: 'Exportera CSV', onclick: () => exportUsers(all) }),
-      el('button.btn.btn--primary', { type: 'button', onclick: () => openInvite(ctx) },
-        el('span', { text: '＋' }), el('span', { text: 'Bjud in admin' }))
+      el('button.btn.btn--primary', { type: 'button', onclick: () => openAddAdmin(ctx) },
+        el('span', { text: '＋' }), el('span', { text: 'Lägg till admin' }))
     )
   ));
 
@@ -261,6 +261,51 @@ async function drawInvites(host, ctx) {
       })
     )))
   ));
+}
+
+function openAddAdmin(ctx) {
+  const m = U.modal({ title: 'Lägg till admin', subtitle: 'Välj hur personen ska få sitt konto.' });
+
+  const option = (icon, label, help, onclick) => el('button.type-option', { type: 'button', onclick },
+    el('span.type-option__icon', { text: icon }),
+    el('span.type-option__label', { text: label }),
+    el('span.type-option__help', { text: help })
+  );
+
+  m.body.appendChild(el('div.type-grid',
+    option('✉', 'Via e-post', 'Kontot skapas direkt. Personen sätter sitt lösenord via "Glömt lösenordet?".',
+      () => { m.close(); openAddByEmail(ctx); }),
+    option('🔗', 'Engångslänk', 'Du skickar en länk. Personen väljer själv e-post och lösenord.',
+      () => { m.close(); openInvite(ctx); })
+  ));
+  m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Avbryt', onclick: m.close }));
+}
+
+function openAddByEmail(ctx) {
+  const m = U.modal({ title: 'Lägg till admin via e-post', subtitle: 'Kontot skapas utan lösenord och får admin-rollen direkt.' });
+
+  const email = U.input({ type: 'email', placeholder: 'namn@foretag.se', autocomplete: 'off' });
+  m.body.appendChild(U.field('E-post', email));
+  m.body.appendChild(el('ul.invite-facts',
+    el('li', { text: 'Personen går till adminportalen, klickar "Glömt lösenordet?" och väljer sitt eget lösenord.' }),
+    el('li', { text: 'Tills Resend är uppsatt kommer mejlet bara fram om adressen är medlem i Supabase-teamet.' })
+  ));
+
+  const save = el('button.btn.btn--primary', {
+    type: 'button', text: 'Skapa admin-konto',
+    onclick: () => U.busy(save, async () => {
+      const value = email.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.focus(); throw new UserError('Ange en giltig e-postadress.'); }
+      await Store.createAdminByEmail(value);
+      U.toast(`${value} är nu admin`, 'ok');
+      m.close();
+      ctx.refresh();
+    }),
+  });
+
+  email.addEventListener('keydown', (e) => { if (e.key === 'Enter') save.click(); });
+  m.footer.appendChild(el('button.btn.btn--ghost', { type: 'button', text: 'Avbryt', onclick: m.close }));
+  m.footer.appendChild(save);
 }
 
 function openInvite(ctx) {
