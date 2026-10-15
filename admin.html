@@ -4,22 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0f">
 <title>QuickThinkers — Adminportal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 <div id="admin-root"></div>
-
-<!-- Vanilla JS, ingen React och ingen Babel. Ordningen spelar roll:
-     data → lager → primitiver → vyer → skal. -->
-<script src="js/admin/mock-data.js"></script>
-<script src="js/admin/store.js"></script>
-<script src="js/admin/ui.js"></script>
-<script src="js/admin/views/courses.js"></script>
-<script src="js/admin/views/users.js"></script>
-<script src="js/admin/views/analytics.js"></script>
-<script src="js/admin/app.js"></script>
+<script type="module" src="/js/admin/main.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 // QuickThinkers adminportal — skal och routing.
 // Lösenordsvyn är en demospärr, inte säkerhet: allt ligger i klienten.
 // Ersätts av Supabase Auth i fas 1.
+import { APP_NAME } from '../lib/brand.js';
 
 (function () {
   'use strict';
@@ -56,7 +57,7 @@
 
     var card = el('form.login__card', { onsubmit: submit },
       el('div.login__mark', el('span', { text: '⚡' })),
-      el('h1.login__title', { text: 'QuickThinkers' }),
+      el('h1.login__title', { text: APP_NAME }),
       el('p.login__sub', { text: 'Adminportal' }),
       pass,
       error,
@@ -102,7 +103,7 @@
       el('div.brand',
         el('span.brand__mark', { text: '⚡' }),
         el('div.brand__text',
-          el('span.brand__name', { text: 'QuickThinkers' }),
+          el('span.brand__name', { text: APP_NAME }),
           el('span.brand__role', { text: 'Adminportal' })
         )
       ),
@@ -126,7 +127,7 @@
 
     return el('header.topbar',
       el('div.topbar__crumb',
-        el('span.topbar__crumb-root', { text: 'QuickThinkers' }),
+        el('span.topbar__crumb-root', { text: APP_NAME }),
         el('span.topbar__sep', { text: '/' }),
         el('span', { text: titles[current] })
       ),

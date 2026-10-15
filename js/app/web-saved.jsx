@@ -1,7 +1,10 @@
 // Desktop saved — saved list, or an inviting empty state with floating icon.
-const DS_savedw = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
 
-function WebSaved({ saved, onExplore, onSwipe, onOpen }) {
+const DS_savedw = DS;
+
+export function WebSaved({ saved, onExplore, onSwipe, onOpen }) {
   const { SectionHeader, Badge, Button } = DS_savedw;
 
   if (!saved || saved.length === 0) {
@@ -58,5 +61,3 @@ function WebSaved({ saved, onExplore, onSwipe, onOpen }) {
     </div>
   );
 }
-
-Object.assign(window, { WebSaved });

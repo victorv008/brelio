@@ -1,7 +1,17 @@
-// Brelio web app — root. Atmosphere + sidebar + top HUD + page transitions + modals + flash.
-const DS_appw = window.BrelioDesignSystem_2b4fd5;
+// QuickThinkers web app — root. Atmosphere + sidebar + top HUD + page transitions + modals + flash.
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { Sidebar, TopBar } from './web-shell.jsx';
+import { WebHome } from './web-home.jsx';
+import { WebSwipe } from './web-swipe.jsx';
+import { WebSearch } from './web-search.jsx';
+import { WebSaved } from './web-saved.jsx';
+import { CourseModal } from './course-modal.jsx';
+import { QuizModal } from './quiz-modal.jsx';
 
-function WebApp() {
+const DS_appw = DS;
+
+export function WebApp() {
   const [tab, setTab] = React.useState('home');
   const [streak] = React.useState(7);
   const [level, setLevel] = React.useState(1);
@@ -63,5 +73,3 @@ function WebApp() {
     </React.Fragment>
   );
 }
-
-Object.assign(window, { WebApp });

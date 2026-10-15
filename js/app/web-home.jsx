@@ -1,5 +1,9 @@
 // Desktop home — hero band, breathing quiz banner, staggered course grid.
-const DS_homew = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { COURSES } from '../data/courses.js';
+
+const DS_homew = DS;
 
 function WebRail({ number, title, courses, delay, onOpen, onSeeAll }) {
   const { SectionHeader, CourseCard } = DS_homew;
@@ -19,10 +23,10 @@ function WebRail({ number, title, courses, delay, onOpen, onSeeAll }) {
   );
 }
 
-function WebHome({ onStartSwipe, onExplore, onOpen, onQuiz }) {
+export function WebHome({ onStartSwipe, onExplore, onOpen, onQuiz }) {
   const { Button } = DS_homew;
   const [quizHover, setQuizHover] = React.useState(false);
-  const courses = window.BRELIO_COURSES;
+  const courses = COURSES;
   return (
     <div>
       {/* hero band */}
@@ -74,5 +78,3 @@ function WebHome({ onStartSwipe, onExplore, onOpen, onQuiz }) {
     </div>
   );
 }
-
-Object.assign(window, { WebHome });

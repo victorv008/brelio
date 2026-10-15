@@ -1,9 +1,13 @@
 // Dagens Quiz — 3 questions, +25 XP per correct answer, awarded on finish.
-const DS_quiz = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { DAILY_QUIZ } from '../data/courses.js';
 
-function QuizModal({ onClose, onXp }) {
+const DS_quiz = DS;
+
+export function QuizModal({ onClose, onXp }) {
   const { Button } = DS_quiz;
-  const quiz = window.BRELIO_QUIZ;
+  const quiz = DAILY_QUIZ;
   const [i, setI] = React.useState(0);
   const [picked, setPicked] = React.useState(null);
   const [score, setScore] = React.useState(0);
@@ -88,5 +92,3 @@ function QuizModal({ onClose, onXp }) {
     </div>
   );
 }
-
-Object.assign(window, { QuizModal });

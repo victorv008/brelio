@@ -1,5 +1,9 @@
-// Brelio web shell — glass sidebar + top HUD bar with working popovers and XP burst.
-const DS_shellw = window.BrelioDesignSystem_2b4fd5;
+// QuickThinkers web shell — glass sidebar + top HUD bar with working popovers and XP burst.
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { APP_NAME } from '../lib/brand.js';
+
+const DS_shellw = DS;
 
 const WEB_NAV = [
   { id: 'home', label: 'Hem', icon: '⌂' },
@@ -8,7 +12,7 @@ const WEB_NAV = [
   { id: 'saved', label: 'Sparade', icon: '🔖' },
 ];
 
-function Sidebar({ tab, onTab, level, xp, onStartSwipe }) {
+export function Sidebar({ tab, onTab, level, xp, onStartSwipe }) {
   const { Button } = DS_shellw;
   return (
     <aside style={{
@@ -18,8 +22,8 @@ function Sidebar({ tab, onTab, level, xp, onStartSwipe }) {
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
       display: 'flex', flexDirection: 'column', padding: '26px 18px', height: '100vh', position: 'sticky', top: 0,
     }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 26, letterSpacing: '-0.02em', color: 'var(--text-hi)', padding: '0 10px 26px' }}>
-        Brelio <span style={{ fontSize: 18 }}>🔥</span>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, letterSpacing: '-0.02em', color: 'var(--text-hi)', padding: '0 10px 26px', whiteSpace: 'nowrap' }}>
+        {APP_NAME} <span style={{ fontSize: 18 }}>🔥</span>
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -66,7 +70,7 @@ function NavItem({ item, active, onTab }) {
 }
 
 /* Animated number — ticks from old to new value over 600ms. */
-function TickNumber({ value }) {
+export function TickNumber({ value }) {
   const [shown, setShown] = React.useState(value);
   const prev = React.useRef(value);
   React.useEffect(() => {
@@ -132,7 +136,7 @@ function Popover({ x = 'right', children, onClose }) {
   );
 }
 
-function TopBar({ streak, level, xp, query, onQuery }) {
+export function TopBar({ streak, level, xp, query, onQuery }) {
   const { StatChip } = DS_shellw;
   const [open, setOpen] = React.useState(null); // 'streak' | 'level' | 'profile'
   const [focus, setFocus] = React.useState(false);
@@ -228,5 +232,3 @@ function TopBar({ streak, level, xp, query, onQuery }) {
     </div>
   );
 }
-
-Object.assign(window, { Sidebar, TopBar, TickNumber });

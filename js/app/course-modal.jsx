@@ -1,11 +1,15 @@
 // Course detail modal — lesson reader. Completing a lesson awards XP once.
-const DS_modal = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { LESSON_TEMPLATE } from '../data/courses.js';
 
-function CourseModal({ course, onClose, onXp }) {
+const DS_modal = DS;
+
+export function CourseModal({ course, onClose, onXp }) {
   const { Button, Badge } = DS_modal;
   const [done, setDone] = React.useState([]);
   if (!course) return null;
-  const lessons = window.BRELIO_LESSONS.slice(0, Math.min(6, course.lessons));
+  const lessons = LESSON_TEMPLATE.slice(0, Math.min(6, course.lessons));
 
   const complete = (i) => {
     if (done.includes(i)) return;
@@ -68,5 +72,3 @@ function CourseModal({ course, onClose, onXp }) {
     </div>
   );
 }
-
-Object.assign(window, { CourseModal });

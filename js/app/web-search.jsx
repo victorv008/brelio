@@ -1,12 +1,16 @@
 // Desktop search/explore — category pills + responsive results grid.
-const DS_searchw = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { COURSES, CATEGORIES } from '../data/courses.js';
 
-function WebSearch({ query, onOpen }) {
+const DS_searchw = DS;
+
+export function WebSearch({ query, onOpen }) {
   const { CourseCard, SectionHeader } = DS_searchw;
   const [active, setActive] = React.useState('Alla');
   const [sort, setSort] = React.useState('relevant');
-  const cats = window.BRELIO_CATEGORIES;
-  const courses = window.BRELIO_COURSES;
+  const cats = CATEGORIES;
+  const courses = COURSES;
   let list = active === 'Alla' ? courses : courses.filter((c) => c.category === active);
   if (query) list = list.filter((c) => (c.title + c.category).toLowerCase().includes(query.toLowerCase()));
 
@@ -70,5 +74,3 @@ function FilterPill({ label, active, onClick }) {
     </button>
   );
 }
-
-Object.assign(window, { WebSearch });

@@ -1,12 +1,16 @@
 // Desktop swipe — physical card deck; keyboard ← ↑ →; confirmation flash via onFlash.
-const DS_swipew = window.BrelioDesignSystem_2b4fd5;
+import React from 'react';
+import { DS } from '../lib/ds.js';
+import { COURSES } from '../data/courses.js';
 
-function WebSwipe({ onXp, onSaveCourse, onFlash }) {
+const DS_swipew = DS;
+
+export function WebSwipe({ onXp, onSaveCourse, onFlash }) {
   const { SwipeCard } = DS_swipew;
   const [idx, setIdx] = React.useState(0);
   const [toast, setToast] = React.useState(null);
   const [popKey, setPopKey] = React.useState(null);
-  const courses = window.BRELIO_COURSES;
+  const courses = COURSES;
   const done = idx >= courses.length;
 
   const flash = (msg, color) => { setToast({ msg, color }); setTimeout(() => setToast(null), 1200); };
@@ -123,5 +127,3 @@ function SwipeBtn({ color, label, glyph, pop, onClick }) {
     </div>
   );
 }
-
-Object.assign(window, { WebSwipe });
